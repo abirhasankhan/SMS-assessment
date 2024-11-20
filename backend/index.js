@@ -1,0 +1,60 @@
+import express from "express";
+import { connectDB } from "./db/connectDB.js";
+import cookieParser from "cookie-parser";
+import cors from "cors";
+
+import dotenv from "dotenv";
+
+import authRoutes from "./routes/auth.route.js";
+
+import teacherRoutes from "./routes/teacher.route.js";  // Import the teacher routes
+import classRoutes from "./routes/class.route.js";  // Import the class routes
+import studentRoutes from "./routes/student.route.js";  // Import the student routes
+import attendanceRoutes from "./routes/attendance.route.js";  // Import the attendance routes
+import examRoutes from "./routes/exam.route.js";  // Import the exam routes
+import feeRoutes from "./routes/fee.route.js";  // Import the fee routes
+import resultRoutes from "./routes/result.route.js";  // Import the result routes
+
+
+
+dotenv.config();
+
+
+const app = express();
+const port = process.env.PORT || 5000;
+
+app.use(cors({origin: "http://localhost:5173", credentials: true}));
+
+app.use(express.json()); // for parsing application/json
+
+app.use(cookieParser()); // allow us to parse incoming cookies
+
+app.use("/api/auth", authRoutes);
+
+// Use the teacher routes
+app.use("/api/teachers", teacherRoutes);
+
+// Use the class routes
+app.use("/api/classes", classRoutes);
+
+// Use the student routes
+app.use("/api/students", studentRoutes);
+
+// Use the attendance routes
+app.use("/api/attendance", attendanceRoutes);
+
+// Use the exam routes
+app.use("/api/exams", examRoutes);
+
+// Use the fee routes
+app.use("/api/fees", feeRoutes);
+
+// Use the result routes
+app.use("/api/results", resultRoutes);
+
+
+
+app.listen(port, () => {
+    connectDB();
+    console.log(`Server is running on port ${port}`);
+});
