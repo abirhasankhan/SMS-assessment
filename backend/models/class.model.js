@@ -4,15 +4,17 @@ const classSchema = new mongoose.Schema({
     className: {
         type: String,
         required: true,
-        maxlength: 50
+        maxlength: 50,
+        unique: true
     },
     teacherId: {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
         ref: "Teacher", // References the Teacher schema
         default: null
     },
     remarks: {
-        type: String
+        type: String,
+        maxlength: 200
     }
 }, {
     timestamps: true // Automatically manages createdAt and updatedAt

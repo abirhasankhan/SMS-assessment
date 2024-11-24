@@ -1,22 +1,36 @@
 import express from "express";
-import { ClassController } from "../controllers/class.controller.js"; // Import ClassController
+import { ClassController } from "../controllers/class.controller.js";
 
 const router = express.Router();
 
-// Route for fetching all classes
+/**
+ * @route   GET /api/classes
+ * @desc    Fetch all classes with optional pagination and sorting
+ */
 router.get("/", ClassController.getAllClasses);
 
-// Route for adding a new class
+/**
+ * @route   POST /api/classes
+ * @desc    Add a new class
+ */
 router.post("/", ClassController.addClass);
 
-
-// Route for updating a class by ID
+/**
+ * @route   PUT /api/classes/:classId
+ * @desc    Update an existing class by ID
+ */
 router.put("/:classId", ClassController.editClass);
 
-// Route for removing a class by ID
+/**
+ * @route   DELETE /api/classes/:classId
+ * @desc    Remove a class by ID
+ */
 router.delete("/:classId", ClassController.removeClass);
 
-// Route for searching classes by name
+/**
+ * @route   GET /api/classes/search
+ * @desc    Search classes by name
+ */
 router.get("/search", ClassController.searchClassByName);
 
 export default router;

@@ -19,7 +19,7 @@ const TeacherPage = () => {
 	const [errorMessage, setErrorMessage] = useState(""); // Error message state
 	const [successMessage, setSuccessMessage] = useState(""); // Success message state
 	const [currentPage, setCurrentPage] = useState(1); // Pagination state
-	const [itemsPerPage] = useState(10); // Items per page
+	const [itemsPerPage] = useState(3); // Items per page
 	//search
 	const [searchQuery, setSearchQuery] = useState("");
 	const [filteredTeachers, setFilteredTeachers] = useState([]);
@@ -250,7 +250,7 @@ const TeacherPage = () => {
 
 			{/* Teacher Table */}
 			<div className="max-w-7xl mx-auto mt-10 p-6 bg-gray-900 bg-opacity-80 backdrop-filter backdrop-blur-lg rounded-xl shadow-xl border border-gray-800">
-				<table className="min-w-full table-auto bg-gray-800 text-white rounded-lg shadow-lg">
+				<table className="min-w-full table-auto bg-gray-800 text-white rounded-lg">
 					<thead>
 						<tr className="bg-gray-700 text-xs font-semibold text-gray-300 uppercase tracking-wider">
 							<th className="py-3 px-4 text-left">Teacher ID</th>
