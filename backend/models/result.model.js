@@ -2,8 +2,8 @@ import mongoose from "mongoose";
 
 const resultSchema = new mongoose.Schema({
     studentId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Student", // References the Student schema
+        type: String, // Using String for studentID
+        ref: "Student", // References the studentID field in the Student schema
         required: true
     },
     examId: {

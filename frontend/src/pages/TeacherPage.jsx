@@ -8,6 +8,7 @@ const TeacherPage = () => {
 	const [showForm, setShowForm] = useState(false);
 	const [editTeacher, setEditTeacher] = useState(null); // To handle editing a teacher
 	const [formData, setFormData] = useState({
+		teacherId: "", // Add teacherId field
 		firstName: "",
 		lastName: "",
 		email: "",
@@ -19,42 +20,32 @@ const TeacherPage = () => {
 	const [successMessage, setSuccessMessage] = useState(""); // Success message state
 	const [currentPage, setCurrentPage] = useState(1); // Pagination state
 	const [itemsPerPage] = useState(10); // Items per page
-
-	// Fetch teachers from the API
-	useEffect(() => {
-		const fetchTeachers = async () => {
-			try {
-				const response = await fetch(API_URI);
-				const data = await response.json();
-
-				if (data.teachers && Array.isArray(data.teachers)) {
-					setTeachers(data.teachers); // Extract the teachers array
-				} else {
-					setTeachers([]);
-				}
-			} catch (error) {
-				setErrorMessage(
-					"Error fetching teachers data. Please try again later."
-				);
-			}
-		};
-		fetchTeachers();
-	}, []);
+	//search
+	const [searchQuery, setSearchQuery] = useState("");
+	const [filteredTeachers, setFilteredTeachers] = useState([]);
 
 	// Add a new teacher to the state
 	const handleAddTeacher = (newTeacher) => {
 		setTeachers([...teachers, newTeacher]);
 		setSuccessMessage("Teacher added successfully!");
+
+		// Clear success message after 5 seconds
+		setTimeout(() => setSuccessMessage(""), 2000);
 	};
 
 	// Update a teacher in the state
 	const handleUpdateTeacher = (updatedTeacher) => {
 		setTeachers(
 			teachers.map((teacher) =>
-				teacher._id === updatedTeacher._id ? updatedTeacher : teacher
+				teacher.teacherId === updatedTeacher.teacherId
+					? updatedTeacher
+					: teacher
 			)
 		);
 		setSuccessMessage("Teacher updated successfully!");
+
+		// Clear success message after 5 seconds
+		setTimeout(() => setSuccessMessage(""), 2000);
 	};
 
 	// Delete a teacher from the state
@@ -66,14 +57,25 @@ const TeacherPage = () => {
 
 			if (response.ok) {
 				setTeachers(
-					teachers.filter((teacher) => teacher._id !== teacherId)
+					teachers.filter(
+						(teacher) => teacher.teacherId !== teacherId
+					)
 				);
 				setSuccessMessage("Teacher deleted successfully!");
+
+				// Clear success message after 5 seconds
+				setTimeout(() => setSuccessMessage(""), 2000);
 			} else {
 				setErrorMessage("Error deleting teacher. Please try again.");
+
+				// Clear error message after 5 seconds
+				setTimeout(() => setErrorMessage(""), 2000);
 			}
 		} catch (error) {
 			setErrorMessage("Error deleting teacher. Please try again.");
+
+			// Clear error message after 5 seconds
+			setTimeout(() => setErrorMessage(""), 2000);
 		}
 	};
 
@@ -83,7 +85,9 @@ const TeacherPage = () => {
 
 		try {
 			const method = editTeacher ? "PUT" : "POST"; // Determine the method based on whether we're adding or updating
-			const url = editTeacher ? `${API_URI}/${editTeacher._id}` : API_URI;
+			const url = editTeacher
+				? `${API_URI}/${editTeacher.teacherId}`
+				: API_URI;
 
 			const response = await fetch(url, {
 				method,
@@ -104,6 +108,7 @@ const TeacherPage = () => {
 			setShowForm(false); // Close the form after submitting
 			setEditTeacher(null); // Reset edit mode
 			setFormData({
+				teacherId: "", // Reset teacherId
 				firstName: "",
 				lastName: "",
 				email: "",
@@ -128,6 +133,7 @@ const TeacherPage = () => {
 	// Open the form in edit mode with the teacher's data
 	const handleEdit = (teacher) => {
 		setFormData({
+			teacherId: teacher.teacherId, // Use teacherId when editing
 			firstName: teacher.firstName,
 			lastName: teacher.lastName,
 			email: teacher.email,
@@ -139,14 +145,72 @@ const TeacherPage = () => {
 		setShowForm(true); // Show the form
 	};
 
+	// Fetch teachers from the API
+	useEffect(() => {
+		const fetchTeachers = async () => {
+			try {
+				const response = await fetch(API_URI);
+				if (!response.ok) {
+					throw new Error("Network response was not ok");
+				}
+				const data = await response.json();
+				console.log(data); // Log the response data to inspect the structure
+
+				if (data.teachers && Array.isArray(data.teachers)) {
+					setTeachers(data.teachers);
+					setFilteredTeachers(data.teachers);
+				} else {
+					setTeachers([]);
+					setFilteredTeachers([]);
+				}
+			} catch (error) {
+				setErrorMessage(
+					"Error fetching teachers data. Please try again later."
+				);
+				console.error(error); // Log the error for debugging purposes
+			}
+		};
+
+		fetchTeachers();
+	}, [teachers]);
+
+
+	// Filter teachers by search query
+	useEffect(() => {
+		if (teachers.length === 0) return; // Skip filtering if no teachers are available
+
+		try {
+			const lowerCaseQuery = searchQuery.toLowerCase();
+			const filtered = teachers.filter((teacher) => {
+				const firstName = teacher.firstName || ""; // Default to empty string if undefined
+				const lastName = teacher.lastName || ""; // Default to empty string if undefined
+				const teacherId = teacher.teacherId || ""; // Default to empty string if undefined
+
+				return (
+					firstName.toLowerCase().includes(lowerCaseQuery) ||
+					lastName.toLowerCase().includes(lowerCaseQuery) ||
+					teacherId.toLowerCase().includes(lowerCaseQuery)
+				);
+			});
+			setFilteredTeachers(filtered);
+		} catch (error) {
+			setErrorMessage(
+				"Error filtering teachers data. Please try again later."
+			);
+			console.error(error); // Log the error for debugging purposes
+		}
+	}, [searchQuery, teachers]);
+
+
 	// Pagination Logic
-	const totalPages = Math.ceil(teachers.length / itemsPerPage);
-	const paginatedTeachers = teachers.slice(
+	const totalPages = Math.ceil(filteredTeachers.length / itemsPerPage);
+	const paginatedTeachers = filteredTeachers.slice(
 		(currentPage - 1) * itemsPerPage,
 		currentPage * itemsPerPage
 	);
 
 	const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
 
 	return (
 		<div className="container mx-auto p-6 animate__animated animate__fadeIn">
@@ -173,41 +237,62 @@ const TeacherPage = () => {
 				Add Teacher
 			</button>
 
+			{/* Search Bar */}
+			<div className="mb-4">
+				<input
+					type="text"
+					placeholder="Search by name or teacher ID..."
+					value={searchQuery}
+					onChange={(e) => setSearchQuery(e.target.value)}
+					className="w-full px-4 py-2 rounded-lg shadow-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+				/>
+			</div>
+
 			{/* Teacher Table */}
-			<div className="max-w-md w-full mx-auto mt-10 p-4 bg-gray-900 bg-opacity-80 backdrop-filter backdrop-blur-lg rounded-xl shadow-2xl border border-gray-800">
-				<table className="min-w-full table-auto bg-gray-900 shadow-md">
+			<div className="max-w-7xl mx-auto mt-10 p-6 bg-gray-900 bg-opacity-80 backdrop-filter backdrop-blur-lg rounded-xl shadow-xl border border-gray-800">
+				<table className="min-w-full table-auto bg-gray-800 text-white rounded-lg shadow-lg">
 					<thead>
-						<tr className="bg-gray-900 text-left text-sm text-white">
-							<th className="py-2 px-4">Name</th>
-							<th className="py-2 px-4">Subject</th>
-							<th className="py-2 px-4">Actions</th>
+						<tr className="bg-gray-700 text-xs font-semibold text-gray-300 uppercase tracking-wider">
+							<th className="py-3 px-4 text-left">Teacher ID</th>
+							<th className="py-3 px-4 text-left">Name</th>
+							<th className="py-3 px-4 text-left">Subject</th>
+							<th className="py-3 px-4 text-center" colSpan="2">
+								Actions
+							</th>
 						</tr>
 					</thead>
 					<tbody>
 						{paginatedTeachers.length > 0 ? (
 							paginatedTeachers.map((teacher) => (
 								<tr
-									key={teacher._id}
-									className="border-t border-gray-900 hover:bg-gray-700 transition-all duration-300 text-white"
+									key={teacher.teacherId}
+									className="hover:bg-gray-700 text-sm"
 								>
-									<td className="py-2 px-4">
+									<td className="py-3 px-4">
+										{teacher.teacherId}
+									</td>
+									<td className="py-3 px-4">
 										{teacher.firstName} {teacher.lastName}
 									</td>
-									<td className="py-2 px-4">
+									<td className="py-3 px-4">
 										{teacher.subject}
 									</td>
-									<td className="py-2 px-4">
+									<td className="py-3 px-4 text-center">
 										<button
 											onClick={() => handleEdit(teacher)}
-											className="bg-green-400 text-white px-4 py-2 rounded-lg mr-2 hover:bg-green-500 transition-all duration-300"
+											className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-all duration-200"
 										>
 											Edit
 										</button>
+									</td>
+									<td className="py-3 px-4 text-center">
 										<button
 											onClick={() =>
-												handleDeleteTeacher(teacher._id)
+												handleDeleteTeacher(
+													teacher.teacherId
+												)
 											}
-											className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-all duration-300"
+											className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-all duration-200"
 										>
 											Delete
 										</button>
@@ -216,148 +301,195 @@ const TeacherPage = () => {
 							))
 						) : (
 							<tr>
-								<td colSpan="3" className="text-center py-4">
+								<td
+									colSpan="5"
+									className="text-center py-4 text-white"
+								>
 									No teachers available.
 								</td>
 							</tr>
 						)}
 					</tbody>
 				</table>
-			</div>
 
-			{/* Pagination */}
-			<div className="flex justify-center mt-4">
-				<button
-					onClick={() => paginate(currentPage - 1)}
-					disabled={currentPage === 1}
-					className="px-4 py-2 bg-gray-800 text-white rounded-lg mr-2 hover:bg-gray-600"
-				>
-					Prev
-				</button>
-				{Array.from({ length: totalPages }).map((_, index) => (
+				{/* Pagination */}
+				<div className="flex justify-center mt-6">
 					<button
-						key={index}
-						onClick={() => paginate(index + 1)}
-						className={`px-4 py-2 rounded-lg ${
-							currentPage === index + 1
-								? "bg-gray-800 text-white"
-								: "bg-gray-200 text-gray-700"
-						} hover:bg-gray-600 hover:text-white transition-all duration-300`}
+						onClick={() => paginate(currentPage - 1)}
+						disabled={currentPage === 1}
+						className="px-6 py-2 bg-gray-700 text-white rounded-lg mr-2 hover:bg-gray-600 transition-all duration-200"
 					>
-						{index + 1}
+						Prev
 					</button>
-				))}
-				<button
-					onClick={() => paginate(currentPage + 1)}
-					disabled={currentPage === totalPages}
-					className="px-4 py-2 bg-gray-800 text-white rounded-lg ml-2 hover:bg-blue-600"
-				>
-					Next
-				</button>
+					{Array.from({ length: totalPages }).map((_, index) => (
+						<button
+							key={index}
+							onClick={() => paginate(index + 1)}
+							className={`px-6 py-2 rounded-lg ${
+								currentPage === index + 1
+									? "bg-blue-600 text-white"
+									: "bg-gray-700 text-white hover:bg-gray-600"
+							} transition-all duration-200`}
+						>
+							{index + 1}
+						</button>
+					))}
+					<button
+						onClick={() => paginate(currentPage + 1)}
+						disabled={currentPage === totalPages}
+						className="px-6 py-2 bg-gray-700 text-white rounded-lg ml-2 hover:bg-gray-600 transition-all duration-200"
+					>
+						Next
+					</button>
+				</div>
 			</div>
 
-			{/* Floating Form to Add/Edit Teacher */}
+			{/* Add/Edit Teacher Form */}
 			{showForm && (
-				<div className="fixed inset-0 flex items-center justify-center z-50 backdrop-blur-md bg-black bg-opacity-50">
-					<div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-lg">
-						<h2 className="text-xl font-bold text-center mb-4">
+				<div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center">
+					<div className="bg-white p-6 rounded-lg shadow-lg w-96">
+						<h2 className="text-2xl font-semibold mb-4 text-center">
 							{editTeacher ? "Edit Teacher" : "Add Teacher"}
 						</h2>
 						<form onSubmit={handleSubmit}>
 							<div className="mb-4">
-								<label className="block text-sm font-medium text-gray-800">
+								<label
+									htmlFor="firstName"
+									className="block mb-2 text-gray-700"
+								>
+									Teacher ID
+								</label>
+								<input
+									type="text"
+									id="teacherId"
+									name="teacherId"
+									value={formData.teacherId}
+									onChange={handleChange}
+									className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+									required
+								/>
+							</div>
+
+							<div className="mb-4">
+								<label
+									htmlFor="firstName"
+									className="block mb-2 text-gray-700"
+								>
 									First Name
 								</label>
 								<input
 									type="text"
+									id="firstName"
 									name="firstName"
 									value={formData.firstName}
 									onChange={handleChange}
+									className="w-full px-4 py-2 border border-gray-300 rounded-lg"
 									required
-									className="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
 								/>
 							</div>
+
 							<div className="mb-4">
-								<label className="block text-sm font-medium text-gray-800">
+								<label
+									htmlFor="lastName"
+									className="block mb-2 text-gray-700"
+								>
 									Last Name
 								</label>
 								<input
 									type="text"
+									id="lastName"
 									name="lastName"
 									value={formData.lastName}
 									onChange={handleChange}
+									className="w-full px-4 py-2 border border-gray-300 rounded-lg"
 									required
-									className="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
 								/>
 							</div>
+
 							<div className="mb-4">
-								<label className="block text-sm font-medium text-gray-800">
+								<label
+									htmlFor="email"
+									className="block mb-2 text-gray-700"
+								>
 									Email
 								</label>
 								<input
 									type="email"
+									id="email"
 									name="email"
 									value={formData.email}
 									onChange={handleChange}
+									className="w-full px-4 py-2 border border-gray-300 rounded-lg"
 									required
-									className="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
 								/>
 							</div>
+
 							<div className="mb-4">
-								<label className="block text-sm font-medium text-gray-800">
+								<label
+									htmlFor="phone"
+									className="block mb-2 text-gray-700"
+								>
 									Phone
 								</label>
 								<input
-									type="text"
+									type="tel"
+									id="phone"
 									name="phone"
 									value={formData.phone}
 									onChange={handleChange}
+									className="w-full px-4 py-2 border border-gray-300 rounded-lg"
 									required
-									className="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
 								/>
 							</div>
+
 							<div className="mb-4">
-								<label className="block text-sm font-medium text-gray-800">
+								<label
+									htmlFor="subject"
+									className="block mb-2 text-gray-700"
+								>
 									Subject
 								</label>
 								<input
 									type="text"
+									id="subject"
 									name="subject"
 									value={formData.subject}
 									onChange={handleChange}
+									className="w-full px-4 py-2 border border-gray-300 rounded-lg"
 									required
-									className="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
 								/>
 							</div>
+
 							<div className="mb-4">
-								<label className="block text-sm font-medium text-gray-800">
+								<label
+									htmlFor="remarks"
+									className="block mb-2 text-gray-700"
+								>
 									Remarks
 								</label>
 								<textarea
+									id="remarks"
 									name="remarks"
 									value={formData.remarks}
 									onChange={handleChange}
-									className="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+									className="w-full px-4 py-2 border border-gray-300 rounded-lg"
 								/>
 							</div>
-							<div className="flex justify-end">
-								<button
-									type="button"
-									onClick={() => setShowForm(false)}
-									className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg mr-4 hover:bg-gray-200"
-								>
-									Cancel
-								</button>
-								<button
-									type="submit"
-									className="px-6 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-600"
-								>
-									{editTeacher
-										? "Update Teacher"
-										: "Add Teacher"}
-								</button>
-							</div>
+
+							<button
+								type="submit"
+								className="w-full bg-blue-700 text-white py-2 rounded-lg hover:bg-blue-600 transition-all duration-300"
+							>
+								{editTeacher ? "Update Teacher" : "Add Teacher"}
+							</button>
 						</form>
+
+						<button
+							onClick={() => setShowForm(false)}
+							className="mt-4 w-full text-gray-700 hover:text-gray-500"
+						>
+							Cancel
+						</button>
 					</div>
 				</div>
 			)}

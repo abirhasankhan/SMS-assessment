@@ -5,16 +5,21 @@ export const TeacherController = {
     // Add a new teacher
     addTeacher: async (req, res) => {
         try {
-            const { firstName, lastName, email, phone, subject, remarks } = req.body;
+            const { teacherId, firstName, lastName, email, phone, subject, remarks } = req.body;
 
-            // Check for duplicate email
-            const existingTeacher = await Teacher.findOne({ email });
+            // Check for duplicate email or teacherId
+            const existingTeacher = await Teacher.findOne({ $or: [{ email }, { teacherId }] });
             if (existingTeacher) {
-                return res.status(400).json({ message: "Email already exists." });
+                return res.status(400).json({ message: "Email or Teacher ID already exists." });
+            }
+
+            // If no teacherID is provided
+            if (!teacherId) {
+                return res.status(400).json({ message: "Teacher ID is required." });
             }
 
             // Create and save a new teacher
-            const teacher = new Teacher({ firstName, lastName, email, phone, subject, remarks });
+            const teacher = new Teacher({ teacherId, firstName, lastName, email, phone, subject, remarks });
             await teacher.save();
 
             res.status(201).json({ message: "Teacher added successfully.", teacher });
@@ -29,8 +34,8 @@ export const TeacherController = {
             const { teacherId } = req.params;
             const updates = req.body;
 
-            // Find and update teacher by ID
-            const teacher = await Teacher.findByIdAndUpdate(teacherId, updates, { new: true });
+            // Find and update teacher by teacherId
+            const teacher = await Teacher.findOneAndUpdate({ teacherId }, updates, { new: true });
             if (!teacher) {
                 return res.status(404).json({ message: "Teacher not found." });
             }
@@ -46,8 +51,8 @@ export const TeacherController = {
         try {
             const { teacherId } = req.params;
 
-            // Find and delete teacher by ID
-            const teacher = await Teacher.findByIdAndDelete(teacherId);
+            // Find and delete teacher by teacherId
+            const teacher = await Teacher.findOneAndDelete({ teacherId });
             if (!teacher) {
                 return res.status(404).json({ message: "Teacher not found." });
             }
@@ -68,11 +73,11 @@ export const TeacherController = {
         }
     },
 
-    // Fetch a single teacher by ID
+    // Fetch a single teacher by teacherId
     getTeacherById: async (req, res) => {
         try {
             const { teacherId } = req.params;
-            const teacher = await Teacher.findById(teacherId);
+            const teacher = await Teacher.findOne({ teacherId });
             if (!teacher) {
                 return res.status(404).json({ message: "Teacher not found." });
             }
@@ -109,5 +114,4 @@ export const TeacherController = {
             res.status(500).json({ message: "Failed to search teachers.", error: error.message });
         }
     }
-
 };

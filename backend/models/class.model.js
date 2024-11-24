@@ -7,7 +7,7 @@ const classSchema = new mongoose.Schema({
         maxlength: 50
     },
     teacherId: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: String,
         ref: "Teacher", // References the Teacher schema
         default: null
     },

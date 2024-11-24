@@ -1,6 +1,12 @@
 import mongoose from "mongoose";
 
 const teacherSchema = new mongoose.Schema({
+    teacherId: {
+        type: String,
+        required: true,
+        unique: true,
+        maxlength: 20
+    },
     firstName: {
         type: String,
         required: true,

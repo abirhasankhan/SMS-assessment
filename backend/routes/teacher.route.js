@@ -9,13 +9,13 @@ router.get("/", TeacherController.getAllTeachers);
 // Route for adding a new teacher
 router.post("/", TeacherController.addTeacher);
 
-// Route for fetching a teacher by ID
+// Route for fetching a teacher by teacherId
 router.get("/:teacherId", TeacherController.getTeacherById);
 
-// Route for updating a teacher by ID
+// Route for updating a teacher by teacherId
 router.put("/:teacherId", TeacherController.editTeacher);
 
-// Route for removing a teacher by ID
+// Route for removing a teacher by teacherId
 router.delete("/:teacherId", TeacherController.removeTeacher);
 
 // Route for searching teachers by name
