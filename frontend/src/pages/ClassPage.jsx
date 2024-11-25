@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from "react";
 
-const API_URI = `${import.meta.env.VITE_SERVER_URL.replace(/\/$/, "")}/classes`;; // Update the API endpoint for classes
-const TEACHER_API_URI = `${import.meta.env.VITE_SERVER_URL.replace(/\/$/, "")}/teachers`; // Endpoint to fetch teachers
+const API_URI = `${import.meta.env.VITE_SERVER_URL.replace(
+	/\/$/,
+	""
+)}/api/classes`;; // Update the API endpoint for classes
+const TEACHER_API_URI = `${import.meta.env.VITE_SERVER_URL.replace(
+	/\/$/,
+	""
+)}/api/teachers`; // Endpoint to fetch teachers
 
 const ClassPage = () => {
 	const [classes, setClasses] = useState([]);
@@ -77,17 +83,42 @@ const ClassPage = () => {
 
 			const classData = await response.json();
 
+			if (!response.ok) {
+				throw new Error(
+					classData.message || "Failed to submit class data."
+				);
+			}
+
 			if (editClass) {
 				handleUpdateClass(classData);
 			} else {
 				handleAddClass(classData);
 			}
 
+			setSuccessMessage(
+				editClass
+					? "Class updated successfully."
+					: "Class added successfully."
+			);
+
+			// Automatically clear success message after 2 seconds
+			setTimeout(() => {
+				setSuccessMessage("");
+			}, 2000);
+
 			setShowForm(false);
 			setEditClass(null);
 			setFormData({ className: "", teacherId: "", remarks: "" });
 		} catch (error) {
-			setErrorMessage("Error submitting class data. Please try again.");
+			// Set error message
+			setErrorMessage(error.message);
+
+			// Automatically clear error message after 2 seconds
+			setTimeout(() => {
+				setErrorMessage("");
+			}, 2000);
+
+			console.error(error);
 		}
 	};
 
@@ -137,7 +168,7 @@ const ClassPage = () => {
 		};
 
 		fetchClassesAndTeachers();
-	}, [classes]); // Empty dependency array to fetch data only once on component mount
+	}, [classes, teachers]); // Empty dependency array to fetch data only once on component mount
 
     useEffect(() => {
         if (classes.length === 0 || teachers.length === 0) return; // Skip filtering if no classes or teachers are available
@@ -145,7 +176,8 @@ const ClassPage = () => {
         try {
             const lowerCaseQuery = searchQuery.toLowerCase();
             const filteredClasses = classes.filter((classItem) => {
-                const className = classItem.className || ""; // Default to empty string if undefined
+				
+            	const className = classItem.className || ""; // Default to empty string if undefined
 
                 // Find the teacher object based on teacherId
                 const teacher = teachers.find(

@@ -16,8 +16,6 @@ function LoginPage() {
         e.preventDefault()
 
 		await login(email, password)
-
-
     }
 
 

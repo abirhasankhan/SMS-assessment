@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from "react";
 
 // Set the API base URI
-const API_URI = `${import.meta.env.VITE_SERVER_URL.replace(/\/$/,"")}/teachers`;
+const API_URI = `${import.meta.env.VITE_SERVER_URL.replace(
+	/\/$/,
+	""
+)}/api/teachers`;
 
 
 const TeacherPage = () => {
@@ -27,10 +30,30 @@ const TeacherPage = () => {
 
 	// Add a new teacher to the state
 	const handleAddTeacher = (newTeacher) => {
+
+		try {
+			// Update teachers and filteredTeachers
+			setTeachers((prevTeachers) => {
+				const updatedTeachers = [...prevTeachers, newTeacher];
+				setFilteredTeachers(updatedTeachers); // Sync filtered list
+				return updatedTeachers;
+			});
+
+			// Display success message
+			setSuccessMessage("Teacher added successfully!");
+			setTimeout(() => setSuccessMessage(""), 2000);
+
+		} catch (error) {
+			console.error("Error adding teacher:", error);
+			setErrorMessage(
+				"An error occurred while adding the teacher. Please try again."
+			);
+			setTimeout(() => setErrorMessage(""), 2000); // Clear error message after 2 seconds
+		}
 		setTeachers([...teachers, newTeacher]);
 		setSuccessMessage("Teacher added successfully!");
 
-		// Clear success message after 5 seconds
+		// Clear success message after 2 seconds
 		setTimeout(() => setSuccessMessage(""), 2000);
 	};
 
@@ -64,7 +87,7 @@ const TeacherPage = () => {
 				);
 				setSuccessMessage("Teacher deleted successfully!");
 
-				// Clear success message after 5 seconds
+				// Clear success message after 2 seconds
 				setTimeout(() => setSuccessMessage(""), 2000);
 			} else {
 				setErrorMessage("Error deleting teacher. Please try again.");
@@ -100,11 +123,29 @@ const TeacherPage = () => {
 
 			const teacher = await response.json();
 
+			if (!response.ok) {
+				throw new Error(
+					teacher.message || "Failed to submit teacher data."
+				);
+			}
+
 			if (editTeacher) {
 				handleUpdateTeacher(teacher); // Update teacher in the state
 			} else {
 				handleAddTeacher(teacher); // Add new teacher to the state
 			}
+
+			// Set success message
+			setSuccessMessage(
+				editTeacher
+					? "Teacher updated successfully!"
+					: "Teacher added successfully!"
+			);
+
+			// Automatically clear success message after 2 seconds
+			setTimeout(() => {
+				setSuccessMessage("");
+			}, 2000);
 
 			setShowForm(false); // Close the form after submitting
 			setEditTeacher(null); // Reset edit mode
@@ -118,7 +159,15 @@ const TeacherPage = () => {
 				remarks: "",
 			}); // Reset form data
 		} catch (error) {
-			setErrorMessage("Error submitting teacher data. Please try again.");
+			// Set error message
+			setErrorMessage(error.message);
+
+			// Automatically clear error message after 2 seconds
+			setTimeout(() => {
+				setErrorMessage("");
+			}, 2000);
+
+			console.error(error);
 		}
 	};
 
@@ -172,46 +221,29 @@ const TeacherPage = () => {
 
 	// Filter teachers by search query
 	useEffect(() => {
-		const timeoutId = setTimeout(() => {
+		if (teachers.length === 0) return; // Skip filtering if no teachers are available
+
+		try {
 			const lowerCaseQuery = searchQuery.toLowerCase();
-			setFilteredTeachers(
-				teachers.filter(
-					(teacher) =>
-						`${teacher.firstName} ${teacher.lastName}`
-							.toLowerCase()
-							.includes(lowerCaseQuery) ||
-						teacher.teacherId.toLowerCase().includes(lowerCaseQuery)
-				)
+			const filtered = teachers.filter((teacher) => {
+				const firstName = teacher.firstName || ""; // Default to empty string if undefined
+				const lastName = teacher.lastName || ""; // Default to empty string if undefined
+				const teacherId = teacher.teacherId || ""; // Default to empty string if undefined
+
+				return (
+					firstName.toLowerCase().includes(lowerCaseQuery) ||
+					lastName.toLowerCase().includes(lowerCaseQuery) ||
+					teacherId.toLowerCase().includes(lowerCaseQuery)
+				);
+			});
+			setFilteredTeachers(filtered);
+		} catch (error) {
+			setErrorMessage(
+				"Error filtering teachers data. Please try again later."
 			);
-		}, 300);
-
-		return () => clearTimeout(timeoutId); // Cleanup
+			console.error(error); // Log the error for debugging purposes
+		}
 	}, [searchQuery, teachers]);
-
-	// useEffect(() => {
-	// 	if (teachers.length === 0) return; // Skip filtering if no teachers are available
-
-	// 	try {
-	// 		const lowerCaseQuery = searchQuery.toLowerCase();
-	// 		const filtered = teachers.filter((teacher) => {
-	// 			const firstName = teacher.firstName || ""; // Default to empty string if undefined
-	// 			const lastName = teacher.lastName || ""; // Default to empty string if undefined
-	// 			const teacherId = teacher.teacherId || ""; // Default to empty string if undefined
-
-	// 			return (
-	// 				firstName.toLowerCase().includes(lowerCaseQuery) ||
-	// 				lastName.toLowerCase().includes(lowerCaseQuery) ||
-	// 				teacherId.toLowerCase().includes(lowerCaseQuery)
-	// 			);
-	// 		});
-	// 		setFilteredTeachers(filtered);
-	// 	} catch (error) {
-	// 		setErrorMessage(
-	// 			"Error filtering teachers data. Please try again later."
-	// 		);
-	// 		console.error(error); // Log the error for debugging purposes
-	// 	}
-	// }, [searchQuery, teachers]);
 
 
 	// Pagination Logic
@@ -262,7 +294,7 @@ const TeacherPage = () => {
 
 			{/* Teacher Table */}
 			<div className="max-w-7xl mx-auto mt-10 p-6 bg-gray-900 bg-opacity-80 backdrop-filter backdrop-blur-lg rounded-xl shadow-xl border border-gray-800 overflow-x-auto">
-				<table className="min-w-full table-auto bg-gray-800 text-white rounded-lg min-w-full">
+				<table className="min-w-full table-auto bg-gray-800 text-white rounded-lg">
 					<thead>
 						<tr className="bg-gray-700 text-xs font-semibold text-gray-300 uppercase tracking-wider">
 							<th className="py-3 px-4 text-left">Teacher ID</th>
@@ -371,145 +403,165 @@ const TeacherPage = () => {
 						<h2 className="text-2xl font-semibold mb-4 text-center">
 							{editTeacher ? "Edit Teacher" : "Add Teacher"}
 						</h2>
-						<form onSubmit={handleSubmit}>
-							<div className="mb-4">
-								<label
-									htmlFor="firstName"
-									className="block mb-2 text-gray-700"
-								>
-									Teacher ID
-								</label>
-								<input
-									type="text"
-									id="teacherId"
-									name="teacherId"
-									value={formData.teacherId}
-									onChange={handleChange}
-									className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-									required
-								/>
-							</div>
-
-							<div className="mb-4">
-								<label
-									htmlFor="firstName"
-									className="block mb-2 text-gray-700"
-								>
-									First Name
-								</label>
-								<input
-									type="text"
-									id="firstName"
-									name="firstName"
-									value={formData.firstName}
-									onChange={handleChange}
-									className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-									required
-								/>
-							</div>
-
-							<div className="mb-4">
-								<label
-									htmlFor="lastName"
-									className="block mb-2 text-gray-700"
-								>
-									Last Name
-								</label>
-								<input
-									type="text"
-									id="lastName"
-									name="lastName"
-									value={formData.lastName}
-									onChange={handleChange}
-									className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-									required
-								/>
-							</div>
-
-							<div className="mb-4">
-								<label
-									htmlFor="email"
-									className="block mb-2 text-gray-700"
-								>
-									Email
-								</label>
-								<input
-									type="email"
-									id="email"
-									name="email"
-									value={formData.email}
-									onChange={handleChange}
-									className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-									required
-								/>
-							</div>
-
-							<div className="mb-4">
-								<label
-									htmlFor="phone"
-									className="block mb-2 text-gray-700"
-								>
-									Phone
-								</label>
-								<input
-									type="tel"
-									id="phone"
-									name="phone"
-									value={formData.phone}
-									onChange={handleChange}
-									className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-									required
-								/>
-							</div>
-
-							<div className="mb-4">
-								<label
-									htmlFor="subject"
-									className="block mb-2 text-gray-700"
-								>
-									Subject
-								</label>
-								<input
-									type="text"
-									id="subject"
-									name="subject"
-									value={formData.subject}
-									onChange={handleChange}
-									className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-									required
-								/>
-							</div>
-
-							<div className="mb-4">
-								<label
-									htmlFor="remarks"
-									className="block mb-2 text-gray-700"
-								>
-									Remarks
-								</label>
-								<textarea
-									id="remarks"
-									name="remarks"
-									value={formData.remarks}
-									onChange={handleChange}
-									className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-								/>
-							</div>
-
-							<button
-								type="submit"
-								className="w-full bg-blue-700 text-white py-2 rounded-lg hover:bg-blue-600 transition-all duration-300"
-							>
-								{editTeacher ? "Update Teacher" : "Add Teacher"}
-							</button>
-						</form>
-
-						<button
-							onClick={() => setShowForm(false)}
-							className="mt-4 w-full text-gray-700 hover:text-gray-500"
+						<form
+							onSubmit={handleSubmit}
+							className="max-w-screen-lg mx-auto p-4"
 						>
-							Cancel
-						</button>
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+								<div className="mb-4">
+									<label
+										htmlFor="teacherId"
+										className="block mb-2 text-gray-700"
+									>
+										Teacher ID
+									</label>
+									<input
+										type="text"
+										id="teacherId"
+										name="teacherId"
+										value={formData.teacherId}
+										onChange={handleChange}
+										className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+										required
+									/>
+								</div>
+
+								<div className="mb-4">
+									<label
+										htmlFor="firstName"
+										className="block mb-2 text-gray-700"
+									>
+										First Name
+									</label>
+									<input
+										type="text"
+										id="firstName"
+										name="firstName"
+										value={formData.firstName}
+										onChange={handleChange}
+										className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+										required
+									/>
+								</div>
+
+								<div className="mb-4">
+									<label
+										htmlFor="lastName"
+										className="block mb-2 text-gray-700"
+									>
+										Last Name
+									</label>
+									<input
+										type="text"
+										id="lastName"
+										name="lastName"
+										value={formData.lastName}
+										onChange={handleChange}
+										className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+										required
+									/>
+								</div>
+
+								<div className="mb-4">
+									<label
+										htmlFor="email"
+										className="block mb-2 text-gray-700"
+									>
+										Email
+									</label>
+									<input
+										type="email"
+										id="email"
+										name="email"
+										value={formData.email}
+										onChange={handleChange}
+										className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+										required
+									/>
+								</div>
+
+								<div className="mb-4">
+									<label
+										htmlFor="phone"
+										className="block mb-2 text-gray-700"
+									>
+										Phone
+									</label>
+									<input
+										type="tel"
+										id="phone"
+										name="phone"
+										value={formData.phone}
+										onChange={handleChange}
+										className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+										required
+									/>
+								</div>
+
+								<div className="mb-4">
+									<label
+										htmlFor="subject"
+										className="block mb-2 text-gray-700"
+									>
+										Subject
+									</label>
+									<input
+										type="text"
+										id="subject"
+										name="subject"
+										value={formData.subject}
+										onChange={handleChange}
+										className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+										required
+									/>
+								</div>
+
+								<div className="mb-4">
+									<label
+										htmlFor="remarks"
+										className="block mb-2 text-gray-700"
+									>
+										Remarks
+									</label>
+									<textarea
+										id="remarks"
+										name="remarks"
+										value={formData.remarks}
+										onChange={handleChange}
+										className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+									/>
+								</div>
+							</div>
+
+							{/* Action Buttons */}
+							<div className="flex justify-end space-x-4 mt-6">
+								<button
+									type="button"
+									onClick={() => {
+										setShowForm(false);
+										setEditTeacher(null);
+										setFormData({
+											teacherId: "",
+											firstName: "",
+											lastName: "",
+											email: "",
+											phone: "",
+											subject: "",
+											remarks: "",
+										});
+									}}
+									className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-all duration-200"
+								>
+									Cancel
+								</button>
+								<button
+									type="submit"
+									className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200"
+								>
+									{editTeacher ? "Update" : "Add"}
+								</button>
+							</div>
+						</form>
 					</div>
 				</div>
 			)}
