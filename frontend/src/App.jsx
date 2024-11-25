@@ -161,7 +161,7 @@ function App() {
 						element={<EmailVerifactionpgae />}
 					/>
 				</Routes>
-				;
+	
 				<Toaster />
 			</div>
 		</>

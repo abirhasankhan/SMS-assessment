@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 
-const API_URI = "http://localhost:5000/api/classes"; // Update the API endpoint for classes
-const TEACHER_API_URI = "http://localhost:5000/api/teachers"; // Endpoint to fetch teachers
+const API_URI = `${import.meta.env.VITE_SERVER_URL.replace(/\/$/, "")}/classes`;; // Update the API endpoint for classes
+const TEACHER_API_URI = `${import.meta.env.VITE_SERVER_URL.replace(/\/$/, "")}/teachers`; // Endpoint to fetch teachers
 
 const ClassPage = () => {
 	const [classes, setClasses] = useState([]);

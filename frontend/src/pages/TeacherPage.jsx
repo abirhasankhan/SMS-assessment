@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 
 // Set the API base URI
-const API_URI = "http://localhost:5000/api/teachers";
+const API_URI = `${import.meta.env.VITE_SERVER_URL.replace(/\/$/,"")}/teachers`;
+
 
 const TeacherPage = () => {
 	const [teachers, setTeachers] = useState([]); // Ensure it's an empty array initially
@@ -150,24 +151,17 @@ const TeacherPage = () => {
 		const fetchTeachers = async () => {
 			try {
 				const response = await fetch(API_URI);
-				if (!response.ok) {
-					throw new Error("Network response was not ok");
-				}
+				if (!response.ok) throw new Error("Failed to fetch teachers");
 				const data = await response.json();
-				console.log(data); // Log the response data to inspect the structure
-
-				if (data.teachers && Array.isArray(data.teachers)) {
-					setTeachers(data.teachers);
-					setFilteredTeachers(data.teachers);
-				} else {
-					setTeachers([]);
-					setFilteredTeachers([]);
-				}
+				setTeachers(data.teachers || []);
+				setFilteredTeachers(data.teachers || []);
 			} catch (error) {
 				setErrorMessage(
-					"Error fetching teachers data. Please try again later."
+					error.message.includes("Failed to fetch")
+						? "Network error. Please check your connection."
+						: "Unable to fetch teachers. Please try again later."
 				);
-				console.error(error); // Log the error for debugging purposes
+				console.error(error);
 			}
 		};
 
@@ -175,31 +169,49 @@ const TeacherPage = () => {
 	}, [teachers]);
 
 
+
 	// Filter teachers by search query
 	useEffect(() => {
-		if (teachers.length === 0) return; // Skip filtering if no teachers are available
-
-		try {
+		const timeoutId = setTimeout(() => {
 			const lowerCaseQuery = searchQuery.toLowerCase();
-			const filtered = teachers.filter((teacher) => {
-				const firstName = teacher.firstName || ""; // Default to empty string if undefined
-				const lastName = teacher.lastName || ""; // Default to empty string if undefined
-				const teacherId = teacher.teacherId || ""; // Default to empty string if undefined
-
-				return (
-					firstName.toLowerCase().includes(lowerCaseQuery) ||
-					lastName.toLowerCase().includes(lowerCaseQuery) ||
-					teacherId.toLowerCase().includes(lowerCaseQuery)
-				);
-			});
-			setFilteredTeachers(filtered);
-		} catch (error) {
-			setErrorMessage(
-				"Error filtering teachers data. Please try again later."
+			setFilteredTeachers(
+				teachers.filter(
+					(teacher) =>
+						`${teacher.firstName} ${teacher.lastName}`
+							.toLowerCase()
+							.includes(lowerCaseQuery) ||
+						teacher.teacherId.toLowerCase().includes(lowerCaseQuery)
+				)
 			);
-			console.error(error); // Log the error for debugging purposes
-		}
+		}, 300);
+
+		return () => clearTimeout(timeoutId); // Cleanup
 	}, [searchQuery, teachers]);
+
+	// useEffect(() => {
+	// 	if (teachers.length === 0) return; // Skip filtering if no teachers are available
+
+	// 	try {
+	// 		const lowerCaseQuery = searchQuery.toLowerCase();
+	// 		const filtered = teachers.filter((teacher) => {
+	// 			const firstName = teacher.firstName || ""; // Default to empty string if undefined
+	// 			const lastName = teacher.lastName || ""; // Default to empty string if undefined
+	// 			const teacherId = teacher.teacherId || ""; // Default to empty string if undefined
+
+	// 			return (
+	// 				firstName.toLowerCase().includes(lowerCaseQuery) ||
+	// 				lastName.toLowerCase().includes(lowerCaseQuery) ||
+	// 				teacherId.toLowerCase().includes(lowerCaseQuery)
+	// 			);
+	// 		});
+	// 		setFilteredTeachers(filtered);
+	// 	} catch (error) {
+	// 		setErrorMessage(
+	// 			"Error filtering teachers data. Please try again later."
+	// 		);
+	// 		console.error(error); // Log the error for debugging purposes
+	// 	}
+	// }, [searchQuery, teachers]);
 
 
 	// Pagination Logic
@@ -249,12 +261,14 @@ const TeacherPage = () => {
 			</div>
 
 			{/* Teacher Table */}
-			<div className="max-w-7xl mx-auto mt-10 p-6 bg-gray-900 bg-opacity-80 backdrop-filter backdrop-blur-lg rounded-xl shadow-xl border border-gray-800">
-				<table className="min-w-full table-auto bg-gray-800 text-white rounded-lg">
+			<div className="max-w-7xl mx-auto mt-10 p-6 bg-gray-900 bg-opacity-80 backdrop-filter backdrop-blur-lg rounded-xl shadow-xl border border-gray-800 overflow-x-auto">
+				<table className="min-w-full table-auto bg-gray-800 text-white rounded-lg min-w-full">
 					<thead>
 						<tr className="bg-gray-700 text-xs font-semibold text-gray-300 uppercase tracking-wider">
 							<th className="py-3 px-4 text-left">Teacher ID</th>
 							<th className="py-3 px-4 text-left">Name</th>
+							<th className="py-3 px-4 text-left">Email</th>
+							<th className="py-3 px-4 text-left">Phone</th>
 							<th className="py-3 px-4 text-left">Subject</th>
 							<th className="py-3 px-4 text-center" colSpan="2">
 								Actions
@@ -273,6 +287,12 @@ const TeacherPage = () => {
 									</td>
 									<td className="py-3 px-4">
 										{teacher.firstName} {teacher.lastName}
+									</td>
+									<td className="py-3 px-4">
+										{teacher.email}
+									</td>
+									<td className="py-3 px-4">
+										{teacher.phone}
 									</td>
 									<td className="py-3 px-4">
 										{teacher.subject}
@@ -346,8 +366,8 @@ const TeacherPage = () => {
 
 			{/* Add/Edit Teacher Form */}
 			{showForm && (
-				<div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center">
-					<div className="bg-white p-6 rounded-lg shadow-lg w-96">
+				<div className="fixed top-10 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center">
+					<div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md mx-4">
 						<h2 className="text-2xl font-semibold mb-4 text-center">
 							{editTeacher ? "Edit Teacher" : "Add Teacher"}
 						</h2>
