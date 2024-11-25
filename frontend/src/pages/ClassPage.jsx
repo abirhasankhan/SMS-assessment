@@ -168,7 +168,7 @@ const ClassPage = () => {
 		};
 
 		fetchClassesAndTeachers();
-	}, [classes]); // Empty dependency array to fetch data only once on component mount
+	}, [classes, teachers]); // Empty dependency array to fetch data only once on component mount
 
     useEffect(() => {
         if (classes.length === 0 || teachers.length === 0) return; // Skip filtering if no classes or teachers are available
