@@ -180,12 +180,12 @@ SMS-assessment/
 ```
 
 ### Screenshots
-![User View 1](images/SMS01.PNG)
-![User View 2](images/SMS02.PNG)
-![User View 3](images/SMS03.PNG)
-![User View 4](images/SMS04.PNG)
-![User View 5](images/SMS05.PNG)
-![User View 6](images/SMS06.PNG)
+![User View 1](images/SMS01.png)
+![User View 2](images/SMS02.png)
+![User View 3](images/SMS03.png)
+![User View 4](images/SMS04.png)
+![User View 5](images/SMS05.png)
+![User View 6](images/SMS06.png)
 
 ## License
 
