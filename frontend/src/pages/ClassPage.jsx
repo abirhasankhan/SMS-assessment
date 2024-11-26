@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 const API_URI = `${import.meta.env.VITE_SERVER_URL.replace(
 	/\/$/,
 	""
-)}/api/classes`;; // Update the API endpoint for classes
+)}/api/classes`; // Update the API endpoint for classes
 const TEACHER_API_URI = `${import.meta.env.VITE_SERVER_URL.replace(
 	/\/$/,
 	""

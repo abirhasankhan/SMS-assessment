@@ -106,20 +106,17 @@ function App() {
 						<Route path="/" element={<HomePage />} />
 						<Route path="/profile" element={<ProfilePage />} />
 
-						<Route path="/students" 
-						element={<StudentPage />} />
-						<Route path="/teachers" 
-						element={<TeacherPage />} />
-						<Route path="/classes" 
-						element={<ClassPage />} />
-						<Route path="/attendance" 
-						element={<AttendancePage />} />
-						<Route path="/fees" 
-						element={<FeePage />} />
-						<Route path="/exams" 
-						element={<ExamPage />} />
-						<Route path="/results" 
-						element={<ResultPage />} />
+						<Route path="/students" element={<StudentPage />} />
+						<Route path="/teachers" element={<TeacherPage />} />
+						<Route path="/classes" element={<ClassPage />} />
+						<Route
+							path="/attendance"
+							element={<AttendancePage />}
+						/>
+
+						<Route path="/fees" element={<FeePage />} />
+						<Route path="/exams" element={<ExamPage />} />
+						<Route path="/results" element={<ResultPage />} />
 
 						{/* Add other protected routes here */}
 					</Route>
@@ -161,7 +158,7 @@ function App() {
 						element={<EmailVerifactionpgae />}
 					/>
 				</Routes>
-	
+
 				<Toaster />
 			</div>
 		</>

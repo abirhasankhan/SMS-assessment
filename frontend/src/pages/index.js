@@ -15,4 +15,4 @@ import EmailVerifactionpgae from "./EmailVerifactionpgae";
 import ForgotPasswordPage from "./ForgotPasswordPage";
 import ResetPasswordPage from "./ResetPasswordPage";
 
-export  {StudentPage, TeacherPage, ClassPage, AttendancePage, FeePage, ExamPage, ResultPage, HomePage, ProfilePage, SignUpPage, LoginPage, EmailVerifactionpgae, ForgotPasswordPage, ResetPasswordPage};
+export { StudentPage, TeacherPage, ClassPage, AttendancePage, FeePage, ExamPage, ResultPage, HomePage, ProfilePage, SignUpPage, LoginPage, EmailVerifactionpgae, ForgotPasswordPage, ResetPasswordPage};

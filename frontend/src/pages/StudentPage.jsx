@@ -196,7 +196,6 @@ const StudentPage = () => {
 		const fetchStudents = async () => {
 			try {
 				// Fetch students
-
 				const response = await fetch(API_URI);
 				if (!response.ok)
 					throw new Error("Network response was not ok");
