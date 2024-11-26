@@ -1,7 +1,7 @@
 import {create} from 'zustand'
 import axios from 'axios'
 
-const API_URI = `sms-assessment-rojg1675w-abir-khans-projects-8c0f5de3.vercel.app`;
+const API_URI = `${import.meta.env.VITE_SERVER_URL.replace(/\/$/, "")}/api/auth`;
 
 
 axios.defaults.withCredentials = true
