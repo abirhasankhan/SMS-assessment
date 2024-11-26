@@ -1,10 +1,25 @@
 import { Exam } from "../models/exam.model.js";
 
 export const ExamController = {
+    // Add a new exam
     addExam: async (req, res) => {
         try {
-            const { classId, examDate, remarks } = req.body;
-            const newExam = new Exam({ classId, examDate, remarks });
+            const { classId, examDate, examTime, remarks } = req.body;
+
+            // Check for conflicts
+            const existingExam = await Exam.findOne({
+                classId,
+                examDate,
+                examTime
+            });
+
+            if (existingExam) {
+                return res.status(400).json({
+                    message: "Conflict detected: An exam for this class is already scheduled at the same time and date."
+                });
+            }
+
+            const newExam = new Exam({ classId, examDate, examTime, remarks });
             await newExam.save();
             res.status(201).json({ message: "Exam added successfully.", newExam });
         } catch (error) {
@@ -12,11 +27,27 @@ export const ExamController = {
         }
     },
 
+    // Edit an existing exam
     editExam: async (req, res) => {
         try {
             const { examId } = req.params;
-            const updates = req.body;
-            const updatedExam = await Exam.findByIdAndUpdate(examId, updates, { new: true });
+            const { classId, examDate, examTime } = req.body;
+
+            // Check for conflicts, excluding the current exam
+            const conflictingExam = await Exam.findOne({
+                classId,
+                examDate,
+                examTime,
+                _id: { $ne: examId } // Exclude the exam being updated
+            });
+
+            if (conflictingExam) {
+                return res.status(400).json({
+                    message: "Conflict detected: Another exam for this class is already scheduled at the same time and date."
+                });
+            }
+
+            const updatedExam = await Exam.findByIdAndUpdate(examId, req.body, { new: true });
             if (!updatedExam) return res.status(404).json({ message: "Exam not found." });
             res.status(200).json({ message: "Exam updated successfully.", updatedExam });
         } catch (error) {
@@ -24,6 +55,7 @@ export const ExamController = {
         }
     },
 
+    // Remove an exam
     removeExam: async (req, res) => {
         try {
             const { examId } = req.params;
@@ -35,12 +67,14 @@ export const ExamController = {
         }
     },
 
+    // Search for exams with filters
     searchExam: async (req, res) => {
         try {
-            const { classId, examDate } = req.query;
+            const { classId, examDate, examTime } = req.query;
             const filters = {};
             if (classId) filters.classId = classId;
-            if (examDate) filters.examDate = examDate;
+            if (examDate) filters.examDate = new Date(examDate);
+            if (examTime) filters.examTime = examTime;
 
             const exams = await Exam.find(filters);
             if (exams.length === 0) return res.status(404).json({ message: "No exams found." });
@@ -51,12 +85,12 @@ export const ExamController = {
     },
 
     // Fetch all exams
-    async getAllExams(req, res) {
+    getAllExams: async (req, res) => {
         try {
             const exams = await Exam.find();
             res.status(200).json(exams);
         } catch (error) {
-            res.status(500).json({ error: error.message });
+            res.status(500).json({ message: "Failed to fetch exams.", error: error.message });
         }
     }
 };

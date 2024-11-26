@@ -10,6 +10,11 @@ const examSchema = new mongoose.Schema({
         type: Date,
         required: true
     },
+    examTime: {
+        type: String,
+        required: true
+    },
+
     remarks: {
         type: String
     }

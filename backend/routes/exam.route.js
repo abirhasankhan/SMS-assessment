@@ -1,22 +1,21 @@
 import express from "express";
-import { ExamController } from "../controllers/exam.controller.js"; // Import the ExamController
+import { ExamController } from "../controllers/exam.controller.js";
 
 const router = express.Router();
 
-// Route for fetching all exams
-router.get("/", ExamController.getAllExams);
+// Add a new exam
+router.post("/add", ExamController.addExam);
 
-// Route for adding a new exam
-router.post("/", ExamController.addExam);
+// Edit an existing exam
+router.put("/edit/:examId", ExamController.editExam);
 
+// Remove an exam
+router.delete("/remove/:examId", ExamController.removeExam);
 
-// Route for updating an exam by ID
-router.put("/:examId", ExamController.editExam);
-
-// Route for removing an exam by ID
-router.delete("/:examId", ExamController.removeExam);
-
-// Route for searching exams by class ID or exam date
+// Search for exams with optional filters
 router.get("/search", ExamController.searchExam);
+
+// Fetch all exams
+router.get("/all", ExamController.getAllExams);
 
 export default router;
