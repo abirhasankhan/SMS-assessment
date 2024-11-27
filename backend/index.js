@@ -1,9 +1,9 @@
 import express from "express";
+import dotenv from "dotenv";
+
 import { connectDB } from "./db/connectDB.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-
-import dotenv from "dotenv";
 
 import authRoutes from "./routes/auth.route.js";
 
@@ -23,7 +23,10 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 5000;
 
-app.use(cors({ origin: process.env.CLIENT_URL, credentials: true}));
+app.use(cors({ 
+  origin: '*', // Allow all origins
+  credentials: true, // Include credentials such as cookies or authorization headers
+}));
 
 app.use(express.json()); // for parsing application/json
 
