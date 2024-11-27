@@ -29,6 +29,7 @@ app.use(express.json()); // for parsing application/json
 
 app.use(cookieParser()); // allow us to parse incoming cookies
 
+
 app.use("/api/auth", authRoutes);
 
 // Use the teacher routes
